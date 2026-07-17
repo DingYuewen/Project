@@ -1,7 +1,7 @@
 %% Criteria for robustness, discriminability, firing rate:
 % robustness >= 0.95; switch_count_valid >= 28/30; 0 < mean_rEf <= 20
 
-files = dir('sd2/*.mat');
+files = dir('sd3/*.mat');
 Nfiles = length(files);
 
 %% Labels to calculate Y
@@ -33,10 +33,10 @@ for i = 1:Nfiles
 end
 
 %% RDA training
-Md1 = fitcdiscr(X, Y_class, ...
+Mdl1 = fitcdiscr(X, Y_class, ...
     'DiscrimType','linear');
 
-Md2 = fitcsvm(X, Y_class, ...
+Mdl2 = fitcsvm(X, Y_class, ...
     'KernelFunction','gaussian', ...
     'Standardize', true);
 
@@ -46,23 +46,23 @@ accuracy = zeros(cv.NumTestSets,1);
 for j = 1:cv.NumTestSets
     trainIdx = training(cv,j);
     testIdx = test(cv,j);
-    Md1 = fitcdiscr(X(trainIdx,:), Y_class(trainIdx), ...
+    Mdl1 = fitcdiscr(X(trainIdx,:), Y_class(trainIdx), ...
         'DiscrimType','linear');
-    Md2 = fitcsvm(X(trainIdx,:), Y_class(trainIdx), ...
+    Mdl2 = fitcsvm(X(trainIdx,:), Y_class(trainIdx), ...
         'KernelFunction','gaussian', ...
         'Standardize', true);
-    pred = predict(Md2,X(testIdx,:));
+    pred = predict(Mdl2,X(testIdx,:));
     accuracy(j) = pred == Y_class(testIdx);
 end
 mean_accuracy = mean(accuracy);
-disp(mean_accuracy);
+disp(['Mean accuracy: ', num2str(mean_accuracy)]);
 
 %% plot
 [sigVth_grid, W_EE_grid] = meshgrid(linspace(0,0.004,100),...
     linspace(0.9,1.3,100));
 Xgrid = [sigVth_grid(:),W_EE_grid(:)];
 
-[label, score] = predict(Md2,Xgrid);
+[label, score] = predict(Mdl2,Xgrid);
 prob_good = score(:,2);
 prob_map = reshape(prob_good,size(sigVth_grid));
 
